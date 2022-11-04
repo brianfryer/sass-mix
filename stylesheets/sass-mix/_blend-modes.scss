@@ -1,3 +1,5 @@
+@use 'sass:math';
+
 // From: https://github.com/heygrady/scss-mix-blend-modes
 
 /**
@@ -13,29 +15,29 @@
   }
 
   @if unit($h) == 'deg' {
-    $h: 3.1415 * 2 * ($h / 360deg);
+    $h: 3.1415 * 2 * (math.div($h, 360deg));
   }
   @if unit($s) == '%' {
-    $s: 0 + ($s / 100%);
+    $s: 0 + (math.div($s, 100%));
   }
   @if unit($v) == '%' {
-    $v: 0 + ($v / 100%);
+    $v: 0 + (math.div($v, 100%));
   }
 
   $ss: $s * $v;
   $ll: (2 - $s) * $v;
 
   @if $ll <= 1 and $ll != 0 {
-    $ss: $ss / $ll;
+    $ss: math.div($ss, $ll);
   } @else if ($ll == 2) {
     $ss: 0;
   } @else {
-    $ss: $ss / (2 - $ll);
+    $ss: math.div($ss, (2 - $ll));
   }
 
-  $ll: $ll / 2;
+  $ll: math.div($ll, 2);
 
-  @return 360deg * $h / (3.1415 * 2), percentage(max(0, min(1, $ss))), percentage(max(0, min(1, $ll)));
+  @return 360deg * math.div($h, (3.1415 * 2)), percentage(max(0, min(1, $ss))), percentage(max(0, min(1, $ll)));
 }
 
 @function mix-hsl-to-hsv($h, $ss: 0, $ll: 0) {
@@ -50,13 +52,13 @@
   }
 
   @if unit($h) == 'deg' {
-    $h: 3.1415 * 2 * ($h / 360deg);
+    $h: 3.1415 * 2 * (math.div($h, 360deg));
   }
   @if unit($ss) == '%' {
-    $ss: 0 + ($ss / 100%);
+    $ss: 0 + (math.div($ss, 100%));
   }
   @if unit($ll) == '%' {
-    $ll: 0 + ($ll / 100%);
+    $ll: 0 + (math.div($ll, 100%));
   }
 
   $ll: $ll * 2;
@@ -67,10 +69,10 @@
     $ss: $ss * (2 - $ll);
   }
 
-  $v: ($ll + $ss) / 2;
-  $s: if($ll + $ss == 0, 0, (2 * $ss) / ($ll + $ss));
+  $v: math.div(($ll + $ss), 2);
+  $s: if($ll + $ss == 0, 0, math.div((2 * $ss), ($ll + $ss)));
 
-  @return 360deg * $h / (3.1415 * 2), percentage(max(0, min(1, $s))), percentage(max(0, min(1, $v)));
+  @return 360deg * math.div($h, (3.1415 * 2)), percentage(max(0, min(1, $s))), percentage(max(0, min(1, $v)));
 }
 
 @function mix-color-to-hsv($color) {
@@ -100,9 +102,9 @@
  * Multiply
  */
 @function mix-blend-multiply ($foreground, $background) {
-  $bm-red: red($background) * red($foreground) / 255;
-  $bm-green: green($background) * green($foreground) / 255;
-  $bm-blue: blue($background) * blue($foreground) / 255;
+  $bm-red: red($background) * math.div(red($foreground), 255);
+  $bm-green: green($background) * math.div(green($foreground), 255);
+  $bm-blue: blue($background) * math.div(blue($foreground), 255);
 
   @return mix-blend-normal(rgba($bm-red, $bm-green, $bm-blue, opacity($foreground)), $background);
 }
@@ -236,7 +238,7 @@
  * Screen
  */
 @function mix-blend-screen-color($foreground, $background) {
-  @return (255 - ( ( (255 - $foreground) * (255 - $background)) / 256));
+  @return (255 - (math.div(( (255 - $foreground) * (255 - $background)), 256)));
 }
 
 @function mix-blend-screen ($foreground, $background) {
@@ -251,7 +253,7 @@
  * Exclusion
  */
 @function mix-blend-exclusion-color($foreground, $background) {
-  @return $background - ($background * (2 / 255) - 1) * $foreground;
+  @return $background - ($background * math.div(2, 255) - 1) * $foreground;
 }
 
 @function mix-blend-exclusion ($foreground, $background) {
@@ -266,10 +268,10 @@
  * Overlay
  */
 @function mix-blend-overlay-color($foreground, $background) {
-  @if $background <= 255 / 2 {
-    $foreground: (2 * $background * $foreground) / 255;
+  @if $background <= math.div(255, 2) {
+    $foreground: math.div((2 * $background * $foreground), 255);
   } @else {
-    $foreground: 255 - (255 - 2 * ($background - (255 / 2))) * (255 - $foreground) / 255;
+    $foreground: 255 - math.div((255 - 2 * ($background - (math.div(255, 2)))) * (255 - $foreground), 255);
   }
   @return $foreground;
 }
@@ -287,9 +289,9 @@
  */
 @function mix-blend-softlight-color($foreground, $background) {
   @if $background < 128 {
-    $foreground: (($foreground / 2) + 64) * $background * (2 / 255);
+    $foreground: (math.div($foreground, 2) + 64) * $background * math.div(2, 255);
   } @else {
-    $foreground: 255 - (191 - ($foreground / 2)) * (255 - $background) * (2 / 255);
+    $foreground: 255 - (191 - math.div($foreground, 2)) * (255 - $background) * math.div(2, 255);
   }
   @return $foreground;
 }
@@ -308,9 +310,9 @@
 @function mix-blend-hardlight-color($foreground, $background) {
   $tmp-blend: $foreground;
   @if $tmp-blend < 128 {
-    $foreground: $background * $tmp-blend * (2 / 255);
+    $foreground: $background * $tmp-blend * math.div(2, 255);
   } @else {
-    $foreground: 255 - (255-$background) * (255-$tmp-blend) * (2 / 255);
+    $foreground: 255 - (255-$background) * (255-$tmp-blend) * math.div(2, 255);
   }
   @return $foreground;
 }
@@ -327,7 +329,7 @@
  * Color Dodge
  */
 @function mix-blend-colordodge-color($foreground, $background) {
-  $tmp: $background * 256 / (255 - $foreground);
+  $tmp: math.div(($background * 256), (255 - $foreground));
   @if $tmp > 255 or $foreground == 255 {
     $foreground: 255;
   } @else {
@@ -348,7 +350,7 @@
  * Color Burn
  */
 @function mix-blend-colorburn-color($foreground, $background) {
-  $tmp: (255 - ((255 - $background) * 255) / $foreground);
+  $tmp: (255 - math.div(((255 - $background) * 255), $foreground));
 
   // Hacked to replicate photoshop
   @if $foreground == 0 {
@@ -479,7 +481,7 @@
  * Divide
  */
 @function mix-blend-divide-colors($foreground, $background) {
-  @return min((($background / 255) / ($foreground / 255)) * 255, 255);
+  @return min(math.div(math.div($background, 255), math.div($foreground, 255)) * 255, 255);
 }
 
 @function mix-blend-divide ($foreground, $background) {
